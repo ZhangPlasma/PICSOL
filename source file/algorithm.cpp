@@ -1,4 +1,4 @@
-#include "algorithmn.h"
+#include "algorithm.h"
 
 void gather(Species& particle, Field& Density, Field& Current)
 {	
@@ -15,10 +15,10 @@ void gather(Species& particle, Field& Density, Field& Current)
 	if (GATHER_METHOD == 0)  /* NGP(Nearest Grid Point) method implement */
 	{ 
 		/* update density and current field */
-		for (int i = 0; i < particle.part.size(); i++)
+		for (unsigned int i = 0; i < particle.part.size(); i++)
 		{   
 			/* nearest grid method */
-			int pos = round((particle.part[i].x1 - xbound) / inc);
+			int pos = (int)round((particle.part[i].x1 - xbound) / inc);
 			Density.val[pos] ++;
 			Current.val[pos] += particle.part[i].v1;
 		}
@@ -26,10 +26,10 @@ void gather(Species& particle, Field& Density, Field& Current)
 	else if (GATHER_METHOD == 1)  /* CIC(Cloud In Cell) method implement */
 	{
 		/* update density and current field */
-		for (int i = 0; i < particle.part.size(); i++)
+		for (unsigned int i = 0; i < particle.part.size(); i++)
 		{
 			double ratio = (particle.part[i].x1 - xbound) / inc;
-			int pos = floor(ratio);
+			int pos = (int)floor(ratio);
 			double prop = ratio - pos;
             
 			/* linear interploration */
@@ -95,6 +95,7 @@ int poissonSOR(Field& phi, Field& rho)
 	}
 	cerr << "POISSON SOLVER CONVERGENCE ERROR !" << endl;
 	system("pause");
+	return 0;
 }
 
 void poissonMatrix(Field& phi, Field& rho)
@@ -144,9 +145,9 @@ void electFieldComp(Field& phi, Field& electField)
 		electField.val[i] = (phi.val[i - 1] - phi.val[i + 1]) / (2 * electField.inc);
 	}
     
-	/* forward difference at boundaries */
+	/* forward and backward difference at boundaries */
 	electField.val[0] = (phi.val[0] - phi.val[1]) / electField.inc;
-	electField.val[electField.grid_num - 1] = (phi[phi.grid_num - 2] - phi[phi.grid_num - 1]) / electField.inc;
+	electField.val[electField.grid_num - 1] = (phi.val[phi.grid_num - 2] - phi.val[phi.grid_num - 1]) / electField.inc;
 }
 
 void pusher(Species& particle, Field& electField, double delta_t)
@@ -159,10 +160,10 @@ void pusher(Species& particle, Field& electField, double delta_t)
 
 	if (GATHER_METHOD == 0)  /* NGP(Nearest Grid Point) method implement */
 	{
-		for (int i = 0; i < particle.part.size(); i++)
+		for (unsigned int i = 0; i < particle.part.size(); i++)
 		{
 			/* particle's electric field is the same as the nearset grid point */
-			int pos = round((particle.part[i].x1 - xbound1) / inc);
+			int pos = (int)round((particle.part[i].x1 - xbound1) / inc);
 
 			/* advance particle */
 			particle.part[i].x1 += particle.part[i].v1 * delta_t;
@@ -177,11 +178,11 @@ void pusher(Species& particle, Field& electField, double delta_t)
 	}
 	else if (GATHER_METHOD == 1)  /* CIC(Cloud In Cell) method implement */
 	{	
-		for (int i = 0; i < particle.part.size(); i++)
+		for (unsigned int i = 0; i < particle.part.size(); i++)
 		{
 			/* particle's electric field is the linear interploration of near grid point */
 			double ratio = (particle.part[i].x1 - xbound1) / inc;
-			int pos = floor(ratio);
+			int pos = (int)floor(ratio);
 			double prop = ratio - pos;
 
 			/* advance particle */
@@ -211,10 +212,10 @@ void leapFrogRewind(Species& particle, Field& electField, double delta_t)
 
 	if (GATHER_METHOD == 0)  /* NGP(Nearest Grid Point) method implement */
 	{
-		for (int i = 0; i < particle.part.size(); i++)
+		for (unsigned int i = 0; i < particle.part.size(); i++)
 		{
 			/* particle's electric field is the same as the nearset grid point */
-			int pos = round((particle.part[i].x1 - xbound1) / inc);
+			int pos = (int)round((particle.part[i].x1 - xbound1) / inc);
 
 			/* velocity rewinding */
 			particle.part[i].v1 -= 0.5 * sc * electField.val[pos] * delta_t;
@@ -222,11 +223,11 @@ void leapFrogRewind(Species& particle, Field& electField, double delta_t)
 	}
 	else if (GATHER_METHOD == 1)  /* CIC(Cloud In Cell) method implement */
 	{
-		for (int i = 0; i < particle.part.size(); i++)
+		for (unsigned int i = 0; i < particle.part.size(); i++)
 		{
 			/* particle's electric field is the linear interploration of near grid point */
 			double ratio = (particle.part[i].x1 - xbound1) / inc;
-			int pos = floor(ratio);
+			int pos = (int)floor(ratio);
 			double prop = ratio - pos;
 
 			/* velocity rewinding */

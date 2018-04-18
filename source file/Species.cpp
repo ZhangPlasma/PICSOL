@@ -1,5 +1,26 @@
 #include "Species.h" 
 
+/*
+generateMaxwell - generate maxwell distridution random number N(mu,sigma) based on Box-Muller Method
+*/
+double generateMaxwell(double mu, double sigma)
+{
+	/* static constant to ensure double number boundary */
+	static const double epsilon = numeric_limits<double>::min();
+	static const double two_pi = 2.0*3.14159265358979323846;
+
+	/* Box-Muller Method */
+	double u1, u2;
+	do
+	{
+		u1 = rand() * (1.0 / RAND_MAX);
+		u2 = rand() * (1.0 / RAND_MAX);
+	} while (u1 <= epsilon);
+
+	double z0 = sqrt(-2.0 * log(u1)) * cos(two_pi * u2);
+	return z0 * sigma + mu;
+}
+
 void Species::initialMaxwell(int num, double temp, double xbound1, double xbound2) 
 {   
 	/* uniformlly distributed in x space, maxwell distributed in v space */
@@ -29,7 +50,7 @@ void Species::saveParticle(string directory)
 double Species::kinetic()
 {
 	double kinetic = 0;
-	for (int i = 0; i < part.size(); i++)
+	for (unsigned int i = 0; i < part.size(); i++)
 	{
 		kinetic += 1 / 2 * mass * sqrt(part[i].v1);
 	}

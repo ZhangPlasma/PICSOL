@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "constant.h"
 #include "Particle.h"
-#include "generateMaxwell.h"
 
 /*
 Species - data structure to store vector and basic info for particular particle species

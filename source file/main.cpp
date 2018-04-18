@@ -3,14 +3,14 @@
 #include "Field.h"
 #include "Particle.h"
 #include "Species.h"
-#include "algorithmn.h"
+#include "algorithm.h"
 
 /**************************************************************************************************** 
  PICSOL is a 1d-1v elctrostatic(2d-3V electromagnetic in the future) PIC( Particle In Cell) 
  code developed by Huaxiang Zhang since 2018 Mar.28th, which is primarily designed to 
  simulate SOL(Scrape-off Layer) plasma in tokamaks.This code is open-source to anyone who is 
  intended to use it. The latest version can be downloaded from my github homepage 
-
+ https://github.com/ZhangPlasma/PICSOL/
  Version Number: 1.01
 ******************************************************************************************************/
 
@@ -56,6 +56,15 @@ int main()
 	end = clock();
 	cout << "Field initialization is complete, time consuming: " << 1000 * (end - start) / (double)(CLOCKS_PER_SEC) << "ms" << endl;
 
+	/* create data storage file based on current system time */
+	time_t t = time(NULL);
+	struct tm current_time;
+	localtime_s(&current_time, &t);
+	string directory = string("./data/") + to_string(current_time.tm_year) + string("-") 
+		                                 + to_string(current_time.tm_mon) + string("-")
+		                                 + to_string(current_time.tm_mday) + string(" ")
+		                                 + to_string(current_time.tm_hour) + string(":")
+		                                 + to_string(current_time.tm_min) + string("/");
 /***********************************************************************************************************************************/
 /***********************************************************************************************************************************/
     
@@ -67,37 +76,29 @@ int main()
 		pusher(electron, electField, delta_t);
 		pusher(ion, electField, delta_t);
 
-		/* field updating */
+		/* field update */
 		gather(electron, electDen, electCurrent);
 		gather(ion, ionDen, ionCurrent);
 		rhoComp(electDen, ionDen, rho);
 	    poissonMatrix(phi, rho);                      
 		electFieldComp(phi, electField);
 
-		/* record data */
+		/* save data */
 		if (main_iter % RECORD_CHECK == 0)
 		{
-			/* create data storage file based on current system time */
-			time_t t = time(NULL);
-			char currentTime[64];
-			strftime(currentTime, sizeof(currentTime), "%Y-%m-%d %H-%M-%S", localtime(&t));
-			string directory("./data/");
-			directory += string(currentTime);
+			/* save field data */
+			electCurrent.saveInfo(directory + to_string(main_iter) + string("electCurrent.dat"));
+			electDen.saveInfo(directory + to_string(main_iter) + string("electDen.dat"));
+			ionCurrent.saveInfo(directory + to_string(main_iter) + string("ionCurrent.dat"));
+			ionDen.saveInfo(directory + to_string(main_iter) + string("ionDen.dat"));
+			phi.saveInfo(directory + to_string(main_iter) + string("phi.dat"));
+			rho.saveInfo(directory + to_string(main_iter) + string("rho.dat"));
+			electField.saveInfo(directory + to_string(main_iter) + string("electField.dat"));
 
-			/* record field data */
-			electCurrent.saveInfo(directory + string("electCurrent.dat"));
-			electDen.saveInfo(directory + string("electDen.dat"));
-			ionCurrent.saveInfo(directory + string("ionCurrent.dat"));
-			ionDen.saveInfo(directory + string("ionDen.dat"));
-			phi.saveInfo(directory + string("phi.dat"));
-			rho.saveInfo(directory + string("rho.dat"));
-			electField.saveInfo(directory + string("electField.dat"));
-
-			/* record particle data */
+			/* save particle data */
 			electron.saveParticle(directory + string("electron.dat"));
 			ion.saveParticle(directory + string("ion.dat"));
 		}
-        
 	}
 	end = clock();
 	cout << "Main Loop is complete, for " << MAX_LOOP << " steps, time consuming: " << 1000 * (end - start) / (double)(CLOCKS_PER_SEC) << "ms" << endl;
